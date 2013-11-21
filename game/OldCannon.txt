@@ -1,0 +1,58 @@
+Private Sub Movement_Timer()
+Dim iCount As Integer, t8Tile As XYStruct, iObject As Integer
+Static CannonCount As Integer
+'Ball: Sprite = 29, Object = 8
+'6 up 3 left
+For iCount = 0 To UBound(tTile)
+    Select Case tTile(iCount).Object
+        Case 8, 9, 10, 11 'Ball 8:Down 9:Up 10:Right 11:Left
+            t8Tile.Y = Int((iCount + 1) / 10) + IIf(tTile(iCount).Object = 8, 1, 0) + IIf(tTile(iCount).Object = 9, -1, 0)
+            t8Tile.X = Int((iCount + 1) Mod 10) - 1 + IIf(tTile(iCount).Object = 10, 1, 0) + IIf(tTile(iCount).Object = 11, -1, 0)
+            
+            If (tTile(IIf(t8Tile.X + t8Tile.Y * 10 > MapSize ^ 2 - 1 Or t8Tile.X + t8Tile.Y * 10 < 0, 0, t8Tile.X + t8Tile.Y * 10)).Object <> 32) Or _
+                (t8Tile.X > MapSize - 1 Or _
+                t8Tile.Y > MapSize - 1 Or _
+                t8Tile.X < 0 Or t8Tile.Y < 0) Then
+                
+                tTile(iCount).Object = 32
+                tTile(iCount).Sprite = 3
+                GoTo GoAgain
+                
+            End If
+            
+            iObject = tTile(iCount).Object
+            
+            tTile(iCount).Object = 32
+            tTile(iCount).Sprite = 3
+        
+            tTile(t8Tile.X + t8Tile.Y * 10).Object = iObject
+            tTile(t8Tile.X + t8Tile.Y * 10).Sprite = 29
+        Case 6, 3, 12, 13 'Cannon 13:Right 3:Left 12:Down 6:Up
+            If Not (CannonCount > 3) Then
+                If Not (Movement.Tag = "Hit") Then
+                    Movement.Tag = "Hit"
+                End If
+                GoTo GoAgain
+            End If
+            
+            t8Tile.X = Int((iCount + 1) Mod 10) - 1 + IIf(tTile(iCount).Object = 13, 1, 0) + IIf(tTile(iCount).Object = 3, -1, 0)
+            t8Tile.Y = Int((iCount + 1) / 10) + IIf(tTile(iCount).Object = 12, 1, 0) + IIf(tTile(iCount).Object = 6, -1, 0)
+            
+            If (t8Tile.X > MapSize - 1 Or _
+                t8Tile.Y > MapSize - 1 Or _
+                t8Tile.X < 0 Or t8Tile.Y < 0) Then GoTo GoAgain
+            
+            iObject = IIf(tTile(iCount).Object = 6, 9, 0) + _
+                      IIf(tTile(iCount).Object = 3, 11, 0) + _
+                      IIf(tTile(iCount).Object = 12, 8, 0) + _
+                      IIf(tTile(iCount).Object = 13, 10, 0)
+        
+            tTile(t8Tile.X + t8Tile.Y * 10).Object = iObject
+            tTile(t8Tile.X + t8Tile.Y * 10).Sprite = 29
+    End Select
+GoAgain:
+Next iCount
+If (CannonCount > 3) Then CannonCount = 0 Else CannonCount = CannonCount + 1
+Movement.Tag = ""
+DrawMap Me.hdc
+End Sub
